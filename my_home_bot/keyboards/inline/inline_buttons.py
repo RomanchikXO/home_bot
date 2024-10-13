@@ -1,4 +1,6 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from datetime import datetime, timedelta
+
 
 def start_buttons():
     # кнопки в главном меню
@@ -68,6 +70,27 @@ def create_or_connect_to_budgbase(flag=False):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(button1, button2)
     return keyboard
+
+
+def correct_task_buttons(text ,task_id, flag=False):
+    # изменить задачу
+    button1 = InlineKeyboardButton(text, callback_data=f"correct_task_{task_id}")
+    if flag:
+        return button1
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(button1)
+    return keyboard
+
+
+def create_task(flag=False):
+    # кнопка создания задачи
+    button1 = InlineKeyboardButton('Добавить', callback_data=f"add_task")
+    if flag:
+        return button1
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(button1)
+    return keyboard
+
 
 
 

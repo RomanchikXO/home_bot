@@ -36,5 +36,6 @@
     def close_connection(conn):
         if conn:
             conn.close()
-   
-4. **Запустить файл main.py**
+
+
+

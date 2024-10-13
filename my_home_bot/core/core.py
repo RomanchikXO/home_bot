@@ -1,6 +1,9 @@
 from database.DataBase import *
 import psycopg2.extras
 from config_data.config import cipher
+import time
+from datetime import datetime
+
 
 
 
@@ -257,3 +260,54 @@ def money_move_change(new_sum:float, cat:str, cat_name:str, id_user:int, id_budg
         return None
     finally:
         close_connection(conn)
+
+
+def get_tasks(id_user, date_start=False, status=False):
+    # выгрузить все задачи пользователя
+    conn = connect_to_database()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql = f"SELECT * FROM task WHERE id_user = %s ORDER BY plane_date ASC"
+            cursor.execute(sql, (id_user,))
+            tasks = cursor.fetchall()
+            result = [{key: row[key] for key in row.keys() if key in ['id', 'task', 'plane_date', 'status']} for row in tasks]
+            return result  # Возвращаем данные бюджета в виде словаря
+
+    except Exception as e:
+        print(f"Ошибка при выгрузке задач: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
+def add_task(id_user:int, text:str, plane_date:int, status='new'):
+    """
+    добавить новую задачу в task
+    plane_date: дата 23:59:00 UNIX
+
+    """
+    conn = connect_to_database()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql = "INSERT INTO task (id_user, task, status, plane_date) VALUES (%s, %s, %s, %s)"
+            cursor.execute(
+                sql,(id_user, text, status, plane_date)
+            )
+            conn.commit()
+
+    except Exception as e:
+        print(f"Ошибка добавлении записи в task: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
+def convert_to_unix(date_str):
+    """
+    перевести дату в формате dd.mm.yyyy в UNIX
+    """
+    return int(time.mktime(datetime.strptime(date_str, "%d.%m.%Y").replace(hour=23, minute=59, second=0).timetuple()))

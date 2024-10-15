@@ -4,4 +4,5 @@
 *.pyc
 __pycache__/
 /venv/
-.DB_Store
+.DS_Store
+/my_home_bot/.idea/

@@ -2,6 +2,8 @@ from loader import bot
 from core.core import *
 from keyboards import *
 from handlers.default_handlers.start import bot_start
+from prettytable import PrettyTable
+
 
 
 base = ''
@@ -262,17 +264,79 @@ def get_pass_base_budg(message):
         bot.send_message(message.from_user.id, 'Вы подключились к новой базе', reply_markup=back_buttons('budget'))
 
 
-
-
-@bot.callback_query_handler(func=lambda call: call.data == "main_menu")
-def push_main_menu(call):
-    # Создание псевдо-сообщения на основе данных из call
+@bot.callback_query_handler(func=lambda call: call.data == "statistic")
+def handle_stat_button(call):
+    """
+    Обрабатывает нажатие кнопки "Статистика".
+    """
     bot.delete_message(call.from_user.id, call.message.message_id)
-    class Message:
-        def __init__(self, chat_id, from_user):
-            self.chat = type('Chat', (object,), {'id': chat_id})()
-            self.from_user = from_user
+    user = check_or_add_user(call.from_user.id)
 
-    from_user = call.from_user
-    message = Message(call.message.chat.id, from_user)
-    bot_start(message)
+    data = money_move_select(user.get('budget_id'))
+
+    total_income = 0  # Общая сумма доходов
+    total_expenditure = 0  # Общая сумма расходов
+    category_income_totals = {}  # Словарь для хранения сумм доходов по категориям
+    category_expenditure_totals = {}  # Словарь для хранения сумм расходов по категориям
+
+    # Подсчет доходов и расходов
+    for item in data:
+        category = item['category']
+
+        # Суммируем доходы
+        total_income += item['income']
+        if category not in category_income_totals:
+            category_income_totals[category] = 0
+        category_income_totals[category] += item['income']
+
+        # Суммируем расходы
+        total_expenditure += item['expenditure']
+        if category not in category_expenditure_totals:
+            category_expenditure_totals[category] = 0
+        category_expenditure_totals[category] += item['expenditure']
+
+    # Создаем таблицу для доходов
+    income_table = PrettyTable()
+    income_table.field_names = ["Категория", "Доходы"]
+
+    # Добавляем категории с ненулевыми доходами
+    for category, income in category_income_totals.items():
+        if income > 0:  # Только категории с доходами больше 0
+            income_table.add_row([category, income])
+
+    # Отправляем таблицу доходов, если она не пустая
+    if income_table.rowcount > 0:
+        bot.send_message(call.from_user.id, f"<pre>{income_table}</pre>", parse_mode='HTML')
+    else:
+        bot.send_message(call.from_user.id, "Нет данных по доходам.", parse_mode='HTML')
+
+    # Создаем таблицу для расходов
+    expenditure_table = PrettyTable()
+    expenditure_table.field_names = ["Категория", "Расходы"]
+
+    # Добавляем категории с ненулевыми расходами
+    for category, expenditure in category_expenditure_totals.items():
+        if expenditure > 0:  # Только категории с расходами больше 0
+            expenditure_table.add_row([category, expenditure])
+
+    # Отправляем таблицу расходов, если она не пустая
+    if expenditure_table.rowcount > 0:
+        bot.send_message(call.from_user.id, f"<pre>{expenditure_table}</pre>", parse_mode='HTML')
+    else:
+        bot.send_message(call.from_user.id, "Нет данных по расходам.", parse_mode='HTML')
+
+    # Общая статистика
+    overall_diff = total_income - total_expenditure
+
+    # Формируем сообщение с общей статистикой
+    stats_message = (
+        f"<b>Общая статистика:</b>\n"
+        f"Общие доходы: {total_income}\n"
+        f"Общие расходы: {total_expenditure}\n"
+        f"Разница: {overall_diff}"
+    )
+
+    # Отправляем общую статистику
+    bot.send_message(call.from_user.id, stats_message, parse_mode='HTML', reply_markup=back_buttons('budget'))
+
+

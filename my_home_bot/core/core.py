@@ -262,6 +262,36 @@ def money_move_change(new_sum:float, cat:str, cat_name:str, id_user:int, id_budg
         close_connection(conn)
 
 
+def money_move_select(id_budgets: int):
+    # вытянут записи из money_move
+    # id_budgets - это id базы
+
+    conn = connect_to_database()
+    if not conn:
+        return None  # Возвращаем None, если не удалось подключиться к базе данных
+
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            # Добавляем нового пользователя в базу данных
+            sql = f"SELECT * FROM money_move WHERE id_budgets = %s AND date_add >= %s"
+            cursor.execute(
+                sql,(id_budgets, get_first_day_of_month())
+            )
+
+            data = cursor.fetchall()
+            result = [{key: row[key] for key in row.keys() if key in ['category', 'income', 'expenditure', 'id_user',
+                                                                      'id_budgets', 'date_add']} for row in
+                      data]
+            return result
+
+
+    except Exception as e:
+        print(f"Ошибка добавлении записи в money_move: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
 def get_tasks(id_user, date_start=False, status=False):
     # выгрузить все задачи пользователя
     conn = connect_to_database()
@@ -311,3 +341,11 @@ def convert_to_unix(date_str):
     перевести дату в формате dd.mm.yyyy в UNIX
     """
     return int(time.mktime(datetime.strptime(date_str, "%d.%m.%Y").replace(hour=23, minute=59, second=0).timetuple()))
+
+
+def get_first_day_of_month():
+    """получить первый день месяца UNIX"""
+    now = datetime.now()
+    first_day = datetime(year=now.year, month=now.month, day=1, hour=0, minute=1)
+    unix_timestamp = int(time.mktime(first_day.timetuple()))
+    return unix_timestamp

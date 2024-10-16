@@ -336,6 +336,29 @@ def add_task(id_user:int, text:str, plane_date:int, status='new'):
         close_connection(conn)
 
 
+def delete_task(id_task:int):
+    """
+    Удалить задачу
+    id_task id задачи в базе task
+    """
+    conn = connect_to_database()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql = "DELETE FROM task WHERE id=%s"
+            cursor.execute(
+                sql, (id_task,)
+            )
+            conn.commit()
+
+    except Exception as e:
+        print(f"Ошибка удаления записи в task: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
 def convert_to_unix(date_str):
     """
     перевести дату в формате dd.mm.yyyy в UNIX
@@ -349,3 +372,44 @@ def get_first_day_of_month():
     first_day = datetime(year=now.year, month=now.month, day=1, hour=0, minute=1)
     unix_timestamp = int(time.mktime(first_day.timetuple()))
     return unix_timestamp
+
+
+def get_piggy(id_budg):
+    # получить сумму копилки
+    conn = connect_to_database()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql = f"SELECT * FROM piggy WHERE budget_id = %s"
+            cursor.execute(sql, (id_budg,))
+            records = cursor.fetchall()
+            result = [{key: row[key] for key in row.keys() if key in ['id', 'money', 'time_add', 'status']} for row in records]
+            return result  # Возвращаем данные бюджета в виде словаря
+
+    except Exception as e:
+        print(f"Ошибка при выгрузке копилки: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
+def edit_piggy(money:float, id_budg:int, status:str):
+    # добавить / убавить из копилки
+    conn = connect_to_database()
+    if not conn:
+        return None
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql = f"INSERT INTO piggy (money, budget_id, status) VALUES (%s, %s, %s)"
+            cursor.execute(sql, (money, id_budg, status,))
+            conn.commit()
+
+    except Exception as e:
+        print(f"Ошибка при добавлении в копилку: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
+

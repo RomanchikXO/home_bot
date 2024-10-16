@@ -32,7 +32,7 @@ def handle_tasks_button(call):
 
         keyboard.add(start_menu, create)
 
-        bot.send_message(call.from_user.id,  'Задачи', reply_markup=keyboard)
+        bot.send_message(call.from_user.id,  'Задачи (нажми чтобы удалить)', reply_markup=keyboard)
     else:
         keyboard.add(start_menu, create)
         bot.send_message(call.from_user.id, 'Задачь пока что нет', reply_markup=keyboard)
@@ -40,13 +40,13 @@ def handle_tasks_button(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("correct_task_"))
 def handle_edit_task(call):
-    # тут будет редактирование задачи
+    # тут будет удаление задачи
     bot.delete_message(call.from_user.id, call.message.message_id)
 
     task_id = call.data.split('_')[2]  # Извлекаем ID задачи из callback_data
-    # Здесь добавьте код для удаления задачи из базы данных по task_id
-    # delete_task(task_id)  # Предполагаем, что у вас есть такая функция
-    bot.send_message(call.from_user.id, "Задача успешно удалена.", reply_markup=back_buttons('main_menu'))
+    delete_task(task_id)
+
+    bot.send_message(call.from_user.id, "Задача успешно удалена.", reply_markup=back_buttons('tasks'))
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "add_task")

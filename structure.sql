@@ -24,7 +24,7 @@ SET default_table_access_method = heap;
 -- Name: accounts; Type: TABLE; Schema: public; Owner: romandikarev
 --
 
-CREATE TABLE public.accounts (
+CREATE TABLE IF NOT EXISTS public.accounts (
     id integer NOT NULL,
     created_at integer DEFAULT (EXTRACT(epoch FROM now()))::integer,
     password character varying(512),
@@ -70,7 +70,7 @@ ALTER SEQUENCE public.accounts_id_seq OWNED BY public.accounts.id;
 -- Name: budgets; Type: TABLE; Schema: public; Owner: romandikarev
 --
 
-CREATE TABLE public.budgets (
+CREATE TABLE IF NOT EXISTS public.budgets (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
     pass character varying(128)
@@ -105,7 +105,7 @@ ALTER SEQUENCE public.budgets_id_seq OWNED BY public.budgets.id;
 -- Name: categories; Type: TABLE; Schema: public; Owner: romandikarev
 --
 
-CREATE TABLE public.categories (
+CREATE TABLE IF NOT EXISTS public.categories (
     id integer NOT NULL,
     id_budget integer NOT NULL,
     category character varying(512) NOT NULL,
@@ -141,7 +141,7 @@ ALTER SEQUENCE public.categories_id_seq OWNED BY public.categories.id;
 -- Name: money_move; Type: TABLE; Schema: public; Owner: romandikarev
 --
 
-CREATE TABLE public.money_move (
+CREATE TABLE IF NOT EXISTS public.money_move (
     category character varying(255),
     income double precision DEFAULT 0,
     expenditure double precision DEFAULT 0,
@@ -180,7 +180,7 @@ ALTER SEQUENCE public.money_move_id_seq OWNED BY public.money_move.id;
 -- Name: task; Type: TABLE; Schema: public; Owner: romandikarev
 --
 
-CREATE TABLE public.task (
+CREATE TABLE IF NOT EXISTS public.task (
     id integer NOT NULL,
     id_user integer NOT NULL,
     task character varying(512) NOT NULL,
@@ -293,3 +293,49 @@ ALTER TABLE ONLY public.task
 -- PostgreSQL database dump complete
 --
 
+--
+-- Name: piggy; Type: TABLE; Schema: public; Owner: romandikarev
+--
+
+CREATE TABLE IF NOT EXISTS public.piggy (
+    id SERIAL PRIMARY KEY,
+    money INT,
+    budget_id INT,
+    time_add BIGINT DEFAULT EXTRACT(EPOCH FROM NOW()),
+    status VARCHAR(255)
+);
+
+ALTER TABLE public.piggy OWNER TO romandikarev;
+
+--
+-- Name: piggy id; Type: DEFAULT; Schema: public; Owner: romandikarev
+--
+
+ALTER TABLE ONLY public.piggy ALTER COLUMN id SET DEFAULT nextval('public.piggy_id_seq'::regclass);
+
+--
+-- Name: piggy_id_seq; Type: SEQUENCE; Schema: public; Owner: romandikarev
+--
+
+CREATE SEQUENCE public.piggy_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE public.piggy_id_seq OWNER TO romandikarev;
+
+--
+-- Name: piggy_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: romandikarev
+--
+
+ALTER SEQUENCE public.piggy_id_seq OWNED BY public.piggy.id;
+
+--
+-- Изменение типа поля money на FLOAT в таблице piggy
+--
+
+ALTER TABLE public.piggy
+ALTER COLUMN money TYPE FLOAT USING money::FLOAT;

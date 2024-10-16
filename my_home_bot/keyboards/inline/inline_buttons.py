@@ -92,7 +92,14 @@ def create_task(flag=False):
     return keyboard
 
 
-
+def deposit_and_subtract(flag=False):
+    button1 = InlineKeyboardButton('Добавить', callback_data=f"deposit")
+    button2 = InlineKeyboardButton('Убавить', callback_data=f"subtract")
+    if flag:
+        return button1, button2
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(button1, button2)
+    return keyboard
 
 
 

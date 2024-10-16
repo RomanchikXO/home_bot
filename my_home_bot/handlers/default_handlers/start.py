@@ -11,3 +11,13 @@ def bot_start(message):
     bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name}!",
                      reply_markup=start_buttons())
 
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "main_menu")
+def handle_main_button(call):
+    # нажали кнопку главное меню
+    bot.delete_message(call.from_user.id, call.message.message_id)
+
+    message = call.message
+    message.from_user = call.from_user
+    bot_start(message)

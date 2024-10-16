@@ -64,7 +64,7 @@ def push_income(call):
             keyboard.add(button)
         keyboard.add(add_cat, button_start)
         keyboard.add(back_button)
-        bot.send_message(call.from_user.id, "Выберите категорию:", reply_markup=keyboard)
+        bot.send_message(call.from_user.id, "Выберите категорию дохода:", reply_markup=keyboard)
     else:
         keyboard.add(add_cat, button_start)
         keyboard.add(back_button)
@@ -117,7 +117,7 @@ def push_expend(call):
             keyboard.add(button)
         keyboard.add(add_cat, button_start)
         keyboard.add(back_button)
-        bot.send_message(call.from_user.id, "Выберите категорию:", reply_markup=keyboard)
+        bot.send_message(call.from_user.id, "Выберите категорию расхода:", reply_markup=keyboard)
     else:
         keyboard.add(add_cat, button_start)
         keyboard.add(back_button)
@@ -185,15 +185,20 @@ def handle_category_selection(call):
 def add_sum_to_money_move(message):
     user = check_or_add_user(message.from_user.id)
     global base
-    if user.get('states') == 'get_sum_inc':
-        money_move_change(float(message.text), 'income', base, user.get('id'), user.get('budget_id'))
-        bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('income'))
-    elif user.get('states') == 'get_sum_exp':
-        money_move_change(float(message.text), 'expenditure', base, user.get('id'), user.get('budget_id'))
-        bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('expend'))
-    base = ''
-    change_user(message.from_user.id, 'states', None)
-
+    message_new = message.text.strip()
+    try:
+        message_new = float(message.text)
+        if user.get('states') == 'get_sum_inc':
+            money_move_change(message_new, 'income', base, user.get('id'), user.get('budget_id'))
+            bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('income'))
+        elif user.get('states') == 'get_sum_exp':
+            money_move_change(message_new, 'expenditure', base, user.get('id'), user.get('budget_id'))
+            bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('expend'))
+        base = ''
+        change_user(message.from_user.id, 'states', None)
+    except ValueError:
+        bot.send_message(message.from_user.id, 'Некорректный ввод. Пожалуйста, введите число еще раз.', reply_markup=back_buttons('budget'))
+        return
 
 
 
@@ -338,5 +343,59 @@ def handle_stat_button(call):
 
     # Отправляем общую статистику
     bot.send_message(call.from_user.id, stats_message, parse_mode='HTML', reply_markup=back_buttons('budget'))
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "piggy_bank")
+def handle_piggy_button(call):
+    # нажали копилка
+    bot.delete_message(call.from_user.id, call.message.message_id)
+    keyboard = InlineKeyboardMarkup()
+    main_menu = start_menu_buttons(True)
+    dep_and_sub = deposit_and_subtract(True)
+    keyboard.add(dep_and_sub[0], dep_and_sub[1])
+    keyboard.add(main_menu)
+    rec = 0
+
+    user = check_or_add_user(call.from_user.id)
+    records = get_piggy(user['budget_id'])
+    if len(records) == 0:
+        rec = 0
+    else:
+        rec = sum(record.get('money') if record.get('status') == 'dep' else -record.get('money') for record in records)
+
+    bot.send_message(call.from_user.id, f'Сейчас в копилке: {rec} руб.', reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ["deposit", "subtract"])
+def handle_piggy_button(call):
+    # нажали добавить или убавить в копилке
+
+    bot.delete_message(call.from_user.id, call.message.message_id)
+    if call.data == "deposit":
+        bot.send_message(call.from_user.id, 'Напишите сумму для добавления', reply_markup=back_buttons('budget'))
+        change_user(call.from_user.id, 'states', 'add_dep')
+    elif call.data == "subtract":
+        bot.send_message(call.from_user.id, 'Напишите сумму для убавления', reply_markup=back_buttons('budget'))
+        change_user(call.from_user.id, 'states', 'add_sub')
+
+
+@bot.message_handler(func=lambda message: check_or_add_user(message.from_user.id).get('states') in ['add_dep', 'add_sub'])
+def add_to_piggy(message):
+    message_text = message.text.strip()
+    try:
+        amount = float(message_text)
+
+        user = check_or_add_user(message.from_user.id)
+        if user.get('states') == 'add_dep':
+            edit_piggy(float(message.text), user.get('budget_id'), 'dep')
+            change_user(message.from_user.id, 'states', None)
+            bot.send_message(message.from_user.id, 'Успешно!', reply_markup=back_buttons('budget'))
+        elif user.get('states') == 'add_sub':
+            edit_piggy(float(message.text), user.get('budget_id'), 'sub')
+            change_user(message.from_user.id, 'states', None)
+            bot.send_message(message.from_user.id, 'Успешно!', reply_markup=back_buttons('budget'))
+    except ValueError:
+        bot.send_message(message.from_user.id, 'Некорректный ввод. Пожалуйста, введите число еще раз:', reply_markup=back_buttons('budget'))
+        return
 
 

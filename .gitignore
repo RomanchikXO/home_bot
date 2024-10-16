@@ -2,7 +2,7 @@
 /.env
 /.venv/
 *.pyc
-__pycache__/
+/__pycache__/
 /venv/
 .DS_Store
 /my_home_bot/.idea/

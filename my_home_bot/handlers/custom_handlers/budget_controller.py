@@ -390,7 +390,6 @@ def add_to_piggy(message):
         user = check_or_add_user(message.from_user.id)
         if user.get('states') == 'add_dep':
             edit_piggy(amount, user.get('budget_id'), 'dep')
-            money_move_change(amount, 'expenditure', 'Копилка', user.get('id'), user.get('budget_id'))
             change_user(message.from_user.id, 'states', None)
             bot.send_message(message.from_user.id, 'Успешно!', reply_markup=back_buttons('budget'))
         elif user.get('states') == 'add_sub':

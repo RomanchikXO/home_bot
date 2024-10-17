@@ -267,6 +267,8 @@ def get_pass_base_budg(message):
     if check_pass:
         base = ''
         bot.send_message(message.from_user.id, 'Вы подключились к новой базе', reply_markup=back_buttons('budget'))
+    else:
+        bot.send_message(message.from_user.id, 'Повтори попытку, пароль не верный', reply_markup=back_buttons('budget'))
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "statistic")

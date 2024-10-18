@@ -292,15 +292,21 @@ def money_move_select(id_budgets: int):
         close_connection(conn)
 
 
-def get_tasks(id_user, date_start=False, status=False):
+def get_tasks(id_user, date_start=False, status=False, id_task=False):
     # выгрузить все задачи пользователя
     conn = connect_to_database()
     if not conn:
         return None
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-            sql = f"SELECT * FROM task WHERE id_user = %s ORDER BY plane_date ASC"
-            cursor.execute(sql, (id_user,))
+            params = (id_user,)
+            sql = f"SELECT * FROM task WHERE id_user = %s"
+            if id_task:
+                sql += f" AND id=%s"
+                params += (id_task,)
+
+            sql += " ORDER BY plane_date ASC"
+            cursor.execute(sql, params)
             tasks = cursor.fetchall()
             result = [{key: row[key] for key in row.keys() if key in ['id', 'task', 'plane_date', 'status']} for row in tasks]
             return result  # Возвращаем данные бюджета в виде словаря
@@ -357,6 +363,44 @@ def delete_task(id_task:int):
         return None
     finally:
         close_connection(conn)
+
+
+def convert_unix_time(unix_time: int, format_string: str):
+    """
+    Преобразует UNIX-время в строку в указанном формате.
+
+    Аргументы:
+    ----------
+    unix_time : int
+        Время в формате UNIX (в секундах с 01.01.1970).
+    format_string : str
+        Формат, в который нужно преобразовать время. Используются следующие обозначения:
+        - %Y: год (4 цифры)
+        - %m: месяц (2 цифры)
+        - %d: день (2 цифры)
+        - %H: часы (24 часа)
+        - %M: минуты
+        - %S: секунды
+
+    Возвращает:
+    -----------
+    str:
+        Строка, отформатированная в соответствии с переданным шаблоном.
+
+    Примеры форматов:
+    -----------------
+    - 'гггг.мм.дд' -> '%Y.%m.%d'
+    - 'дд.мм.гггг' -> '%d.%m.%Y'
+    - 'чч:мм:сс' -> '%H:%M:%S'
+    - 'дд.мм.гггг чч:мм' -> '%d.%m.%Y %H:%M'
+    """
+    dt_object = datetime.utcfromtimestamp(unix_time)
+
+    # Заменяем псевдоформаты на реальные для strftime
+    format_string = format_string.replace('гггг', '%Y').replace('мм', '%m').replace('дд', '%d')
+    format_string = format_string.replace('чч', '%H').replace('мм', '%M').replace('сс', '%S')
+
+    return dt_object.strftime(format_string)
 
 
 def convert_to_unix(date_str):

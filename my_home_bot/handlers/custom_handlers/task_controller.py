@@ -32,7 +32,7 @@ def handle_tasks_button(call):
 
         keyboard.add(start_menu, create)
 
-        bot.send_message(call.from_user.id,  'Задачи (нажми чтобы удалить)', reply_markup=keyboard)
+        bot.send_message(call.from_user.id,  'Задачи', reply_markup=keyboard)
     else:
         keyboard.add(start_menu, create)
         bot.send_message(call.from_user.id, 'Задачь пока что нет', reply_markup=keyboard)
@@ -40,13 +40,41 @@ def handle_tasks_button(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("correct_task_"))
 def handle_edit_task(call):
-    # тут будет удаление задачи
+    # тут будет редактирование задачи
     bot.delete_message(call.from_user.id, call.message.message_id)
+    user = check_or_add_user(call.from_user.id)
 
     task_id = call.data.split('_')[2]  # Извлекаем ID задачи из callback_data
-    delete_task(task_id)
+    task = get_tasks(id_user=user.get('id'), id_task=int(task_id))[0]
+    message = f"Плановая дата: {convert_unix_time(task['plane_date'], 'дд.мм.гггг')}\n"
+    message += f"Статус: {task['status']}\n\n"
+    message += f"Задача: {task['task']}\n"
+    back_but = back_buttons('tasks', True)
 
-    bot.send_message(call.from_user.id, "Задача успешно удалена.", reply_markup=back_buttons('tasks'))
+    del_but, ed_but = task_edit_buttons(int(task_id), True)
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(del_but, ed_but)
+    keyboard.add(back_but)
+    bot.send_message(call.from_user.id, message, reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("del_task_"))
+def handle_del_task(call):
+    # удалить задачу
+    bot.delete_message(call.from_user.id, call.message.message_id)
+    task_id = call.data.split('_')[2]
+    delete_task(task_id)
+    bot.send_message(call.from_user.id, 'Задача удалена', reply_markup=back_buttons('tasks'))
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("edit_task_"))
+def handle_correct_task(call):
+    #редактировать задачу
+    bot.delete_message(call.from_user.id, call.message.message_id)
+    task_id = call.data.split('_')[2]
+    bot.send_message(call.from_user.id, 'Пока в разработке', reply_markup=back_buttons('tasks'))
+
+
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "add_task")

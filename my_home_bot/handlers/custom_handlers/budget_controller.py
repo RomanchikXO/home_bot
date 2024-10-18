@@ -309,13 +309,7 @@ def handle_stat_button(call):
     # Добавляем категории с ненулевыми доходами
     for category, income in category_income_totals.items():
         if income > 0:  # Только категории с доходами больше 0
-            income_table.add_row([category, income])
-
-    # Отправляем таблицу доходов, если она не пустая
-    if income_table.rowcount > 0:
-        bot.send_message(call.from_user.id, f"<pre>{income_table}</pre>", parse_mode='HTML')
-    else:
-        bot.send_message(call.from_user.id, "Нет данных по доходам.", parse_mode='HTML')
+            income_table.add_row([category, int(income)])
 
     # Создаем таблицу для расходов
     expenditure_table = PrettyTable()
@@ -324,27 +318,37 @@ def handle_stat_button(call):
     # Добавляем категории с ненулевыми расходами
     for category, expenditure in category_expenditure_totals.items():
         if expenditure > 0:  # Только категории с расходами больше 0
-            expenditure_table.add_row([category, expenditure])
-
-    # Отправляем таблицу расходов, если она не пустая
-    if expenditure_table.rowcount > 0:
-        bot.send_message(call.from_user.id, f"<pre>{expenditure_table}</pre>", parse_mode='HTML')
-    else:
-        bot.send_message(call.from_user.id, "Нет данных по расходам.", parse_mode='HTML')
+            expenditure_table.add_row([category, int(expenditure)])
 
     # Общая статистика
     overall_diff = total_income - total_expenditure
 
-    # Формируем сообщение с общей статистикой
-    stats_message = (
-        f"<b>Общая статистика:</b>\n"
+    # Формируем сообщение с таблицами доходов, расходов и общей статистикой
+    full_message = ""
+
+    # Добавляем таблицу доходов, если она не пустая
+    if income_table.rowcount > 0:
+        full_message += f"<b>Доходы:</b>\n<pre>{income_table}</pre>\n"
+    else:
+        full_message += "Нет данных по доходам.\n"
+
+    # Добавляем таблицу расходов, если она не пустая
+    if expenditure_table.rowcount > 0:
+        full_message += f"<b>Расходы:</b>\n<pre>{expenditure_table}</pre>\n"
+    else:
+        full_message += "Нет данных по расходам.\n"
+
+    # Добавляем общую статистику
+    full_message += (
+        f"\n<b>Общая статистика:</b>\n"
         f"Общие доходы: {total_income}\n"
         f"Общие расходы: {total_expenditure}\n"
-        f"Разница: {overall_diff}"
+        f"Разница: {int(overall_diff)}"
     )
 
-    # Отправляем общую статистику
-    bot.send_message(call.from_user.id, stats_message, parse_mode='HTML', reply_markup=back_buttons('budget'))
+    # Отправляем всё как одно сообщение
+    bot.send_message(call.from_user.id, full_message, parse_mode='HTML', reply_markup=back_buttons('budget'))
+
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "piggy_bank")

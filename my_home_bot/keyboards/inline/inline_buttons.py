@@ -61,6 +61,7 @@ def back_buttons(way:str, flag=False):
     keyboard.add(button1)
     return keyboard
 
+
 def create_or_connect_to_budgbase(flag=False):
     # кнопки создать и подключиться к базе бюджета
     button1 = InlineKeyboardButton(text="Создать", callback_data="create_base_budg")
@@ -95,6 +96,29 @@ def create_task(flag=False):
 def deposit_and_subtract(flag=False):
     button1 = InlineKeyboardButton('Добавить', callback_data=f"deposit")
     button2 = InlineKeyboardButton('Убавить', callback_data=f"subtract")
+    if flag:
+        return button1, button2
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(button1, button2)
+    return keyboard
+
+
+def task_edit_buttons(task_id, flag=False):
+    """
+        Создаёт кнопки для редактирования и удаления задачи.
+
+        Аргументы:
+        ----------
+        task_id : int
+            ID задачи, который будет передаваться в callback_data.
+
+        Возвращает:
+        -----------
+        InlineKeyboardButton:
+            Кнопки для редактирования и удаления.
+        """
+    button1 = InlineKeyboardButton('Удалить', callback_data=f"del_task_{task_id}")
+    button2 = InlineKeyboardButton('Изменить', callback_data=f"edit_task_{task_id}")
     if flag:
         return button1, button2
     keyboard = InlineKeyboardMarkup()

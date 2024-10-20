@@ -339,3 +339,10 @@ ALTER SEQUENCE public.piggy_id_seq OWNED BY public.piggy.id;
 
 ALTER TABLE public.piggy
 ALTER COLUMN money TYPE FLOAT USING money::FLOAT;
+
+--
+-- Добавление поля comment в таблицу money_move
+--
+
+ALTER TABLE public.money_move
+ADD COLUMN comment TEXT NULL;

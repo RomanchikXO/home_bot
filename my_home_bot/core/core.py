@@ -238,10 +238,11 @@ def handle_password(new_password: str, old_password: str = None) -> str:
         return "Старый пароль не передан."
 
 
-def money_move_change(new_sum:float, cat:str, cat_name:str, id_user:int, id_budg:int):
+def money_move_change(new_sum:float, cat:str, cat_name:str, id_user:int, id_budg:int, comm):
     # добавить запись в money_move
     # cat - это название столбца (income: доход / expenditure: расход)
     # cat_name - это название категории
+    # comm - комментарий
     conn = connect_to_database()
     if not conn:
         return None  # Возвращаем None, если не удалось подключиться к базе данных
@@ -249,9 +250,9 @@ def money_move_change(new_sum:float, cat:str, cat_name:str, id_user:int, id_budg
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
             # Добавляем нового пользователя в базу данных
-            sql = f"INSERT INTO money_move (category, {cat}, id_user, id_budgets) VALUES (%s, %s, %s, %s)"
+            sql = f"INSERT INTO money_move (category, {cat}, id_user, id_budgets, comment) VALUES (%s, %s, %s, %s, %s)"
             cursor.execute(
-                sql,(cat_name, new_sum, id_user, id_budg)
+                sql,(cat_name, new_sum, id_user, id_budg, comm,)
             )
             conn.commit()
 

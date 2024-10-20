@@ -183,25 +183,60 @@ def handle_category_selection(call):
 
 @bot.message_handler(func=lambda message: check_or_add_user(message.from_user.id).get('states') in ['get_sum_inc', 'get_sum_exp'])
 def add_sum_to_money_move(message):
+    # получаем сумму расхода/дохода, обрабатываем ее и заправшиваем коммент
+    bot.delete_message(message.from_user.id, message.message_id)
+    try:
+        bot.delete_message(message.from_user.id, message.message_id - 1)
+    except Exception as e:
+        # Игнорируем ошибки, чтобы код продолжал выполнение
+        pass
     user = check_or_add_user(message.from_user.id)
     global base
+
     message_new = message.text.strip()
     try:
         message_new = float(message.text)
+        base = {'name_cat': base, 'sum_money': message_new}
+
         if user.get('states') == 'get_sum_inc':
-            money_move_change(message_new, 'income', base, user.get('id'), user.get('budget_id'))
-            bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('income'))
+            bot.send_message(message.from_user.id, f"Введите комментарий для дохода в категории '{base['name_cat']}'",
+                             reply_markup=back_buttons('income'))
+            change_user(message.from_user.id, 'states', 'get_comm_inc')
+
         elif user.get('states') == 'get_sum_exp':
-            money_move_change(message_new, 'expenditure', base, user.get('id'), user.get('budget_id'))
-            bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('expend'))
-        base = ''
-        change_user(message.from_user.id, 'states', None)
+            bot.send_message(message.from_user.id, f"Введите комментарий для дохода в категории '{base['name_cat']}'",
+                             reply_markup=back_buttons('expend'))
+            change_user(message.from_user.id, 'states', 'get_comm_exp')
+
     except ValueError:
         bot.send_message(message.from_user.id, 'Некорректный ввод. Пожалуйста, введите число еще раз.', reply_markup=back_buttons('budget'))
         return
 
 
 
+@bot.message_handler(func=lambda message: check_or_add_user(message.from_user.id).get('states') in ['get_comm_inc', 'get_comm_exp'])
+def add_comm_to_money_move(message):
+    # получаем комментарий добавляем в базу money_move запись
+    bot.delete_message(message.from_user.id, message.message_id)
+    try:
+        bot.delete_message(message.from_user.id, message.message_id - 1)
+    except Exception as e:
+        # Игнорируем ошибки, чтобы код продолжал выполнение
+        pass
+
+    user = check_or_add_user(message.from_user.id)
+    global base
+
+
+    if user.get('states') == 'get_comm_inc':
+        money_move_change(base['sum_money'], 'income', base['name_cat'], user.get('id'), user.get('budget_id'), comm=message.text)
+        bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('income'))
+    elif user.get('states') == 'get_comm_exp':
+        money_move_change(base['sum_money'], 'income', base['name_cat'], user.get('id'), user.get('budget_id'), comm=message.text)
+        bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('expend'))
+
+    base = ''
+    change_user(message.from_user.id, 'states', None)
 
 
 
@@ -387,6 +422,7 @@ def handle_piggy_button(call):
 
 @bot.message_handler(func=lambda message: check_or_add_user(message.from_user.id).get('states') in ['add_dep', 'add_sub'])
 def add_to_piggy(message):
+    # добаление/убавление в копилку
     message_text = message.text.strip()
     try:
         amount = float(message_text)

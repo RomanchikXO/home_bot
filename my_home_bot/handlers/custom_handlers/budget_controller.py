@@ -274,15 +274,58 @@ def handle_edit_record(call):
     record_id = int(call.data.split("_")[1])  # Получаем ID записи из callback_data
     bot.delete_message(call.from_user.id, call.message.message_id)
 
-    # Здесь вы можете отправить пользователю сообщение с просьбой ввести новые данные.
     record = money_move_select(user.get('budget_id'), record_id)[0]
-    print(record)
-    bot.send_message(call.from_user.id, f"Введите новые данные для записи ID {record_id}:")
 
-    # Сохраняем ID записи в состоянии пользователя
-    # Для этого вы можете использовать временное хранилище, например, словарь:
-     # Убедитесь, что edit_states объявлен ранее
+    amount_type = "Доход" if record['income'] != 0 else "Расход"
+    amount_value = record['income'] if record['income'] != 0 else record['expenditure']
+    comment = record['comment'] if record['comment'] is not None else 'Без комментария'
 
+    # Создание таблицы
+    table = PrettyTable()
+
+    # Добавляем по одной строке на каждое поле
+    table.field_names = ["Параметр", "Значение"]
+    table.add_row(["Категория", record['category']])
+    table.add_row([amount_type, amount_value])
+    table.add_row(["Комментарий", comment])
+    table.max_width = 15  # Устанавливаем максимальную ширину
+    table.align = "l"
+    table_string = table.get_string()
+
+    keyboard = InlineKeyboardMarkup()
+    back_but = back_buttons('budget', True)
+    del_but, edit_but = del_edit_money_buttons(record_id, True)
+
+    keyboard.add(del_but, edit_but)
+    keyboard.add((back_but))
+
+    bot.send_message(
+        call.from_user.id,
+        f"Введите новые данные для записи ID {record_id}:\n\n```\n{table_string}\n```",
+        reply_markup=keyboard,
+        parse_mode='MarkdownV2'  # Используем MarkdownV2, чтобы текст форматировался правильно
+    )
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("del_mon_"))
+def handle_del_money_record(call):
+    # тут удаление записи в базе money_move
+    bot.delete_message(call.from_user.id, call.message.message_id)
+    user = check_or_add_user(call.from_user.id)
+
+    rec_id = call.data.split('_')[2]  # Извлекаем ID записи из callback_data
+    del_or_edit_task('del', rec_id)
+    bot.send_message(call.from_user.id, 'Успешно удалено', reply_markup=back_buttons('hist_budg'))
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("ed_mon_"))
+def handle_edit_money_record(call):
+    # тут запрос на изменение суммы в базе money_move
+    bot.delete_message(call.from_user.id, call.message.message_id)
+    rec_id = call.data.split('_')[2]
+
+
+    bot.send_message(call.from_user.id, 'Пока в разработке', reply_markup=back_buttons('hist_budg'))
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("load_more_"))
 def handle_load_more(call):

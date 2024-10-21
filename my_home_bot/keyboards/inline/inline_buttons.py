@@ -131,6 +131,29 @@ def task_edit_buttons(task_id, flag=False):
     return keyboard
 
 
+def del_edit_money_buttons(money_id, flag=False):
+    """
+        Создаёт кнопки для редактирования и удаления записи в money_move.
+
+        Аргументы:
+        ----------
+        money_id : int
+            ID записи, который будет передаваться в callback_data.
+
+        Возвращает:
+        -----------
+        InlineKeyboardButton:
+            Кнопки для редактирования и удаления.
+        """
+    button1 = InlineKeyboardButton('Удалить', callback_data=f"del_mon_{money_id}")
+    button2 = InlineKeyboardButton('Изменить', callback_data=f"ed_mon_{money_id}")
+    if flag:
+        return button1, button2
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(button1, button2)
+    return keyboard
+
+
 def create_history_buttons(history_data, current_page, total_pages):
     """
     Создает клавиатуру с кнопками на основе истории денежных перемещений
@@ -163,9 +186,6 @@ def create_history_buttons(history_data, current_page, total_pages):
         keyboard.add(InlineKeyboardButton(text="Предыдущие", callback_data=f"load_previous_{current_page - 1}"), back_buttons('budget', True))
 
     return keyboard
-
-
-
 
 
 

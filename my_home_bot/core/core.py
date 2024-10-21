@@ -356,6 +356,33 @@ def count_records(id_user):
         close_connection(conn)
 
 
+def del_or_edit_task (type_but:str, id_record:int, text=False):
+    sql = ''
+    conn = connect_to_database()
+    if not conn:
+        return None
+    if type_but == 'del':
+        sql = f"DELETE FROM money_move WHERE id = %s"
+        params = (id_record,)
+    elif type_but == 'edit':
+        sql = "UPDATE money_move SET comment = %s WHERE id = %s"
+        params = (text, id_record)
+    else:
+        # Если тип операции не поддерживается
+        print("Некорректный тип операции")
+        return None
+
+
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            cursor.execute(sql, params)
+            conn.commit()
+    except Exception as e:
+        print(f"Ошибка при обновлении/удалении записи в money_move: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
 
 
 def get_tasks(id_user, date_start=False, status=False, id_task=False):

@@ -234,7 +234,7 @@ def add_comm_to_money_move(message):
         money_move_change(base['sum_money'], 'income', base['name_cat'], user.get('id'), user.get('budget_id'), comm=message.text)
         bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('income'))
     elif user.get('states') == 'get_comm_exp':
-        money_move_change(base['sum_money'], 'income', base['name_cat'], user.get('id'), user.get('budget_id'), comm=message.text)
+        money_move_change(base['sum_money'], 'expenditure', base['name_cat'], user.get('id'), user.get('budget_id'), comm=message.text)
         bot.send_message(message.from_user.id, 'Успешно', reply_markup=back_buttons('expend'))
 
     base = ''

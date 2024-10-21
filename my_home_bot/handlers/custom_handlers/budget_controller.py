@@ -239,6 +239,99 @@ def add_comm_to_money_move(message):
     change_user(message.from_user.id, 'states', None)
 
 
+@bot.callback_query_handler(func=lambda call: call.data == "hist_budg")
+def handle_hist_budg(call):
+    """
+    Обрабатывает нажатие кнопки "История правок".
+    Загружает первую страницу данных.
+    """
+    bot.delete_message(call.from_user.id, call.message.message_id)
+
+    user_id = call.from_user.id  # Извлекаем ID пользователя Telegram
+    user = check_or_add_user(user_id)  # Получаем данные пользователя из БД
+
+    # Получаем последние 10 записей для этого пользователя
+    history_data = get_history_for_user(user.get('id'), offset=0, limit=10)
+    total_records = count_records(user.get('id'))  # Функция, чтобы узнать общее количество записей
+    total_pages = (total_records // 10) + (1 if total_records % 10 else 0)
+
+    keyboard = create_history_buttons(history_data, 0, total_pages)
+
+    if not history_data:
+        bot.send_message(call.from_user.id, "Нет данных для отображения.")
+        return
+
+    # Отправляем клавиатуру с историей
+    bot.send_message(call.from_user.id, "История последних правок:", reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("edit_"))
+def handle_edit_record(call):
+    """
+    Обрабатывает нажатие кнопки редактирования записи.
+    """
+    user = check_or_add_user(call.from_user.id)
+    record_id = int(call.data.split("_")[1])  # Получаем ID записи из callback_data
+    bot.delete_message(call.from_user.id, call.message.message_id)
+
+    # Здесь вы можете отправить пользователю сообщение с просьбой ввести новые данные.
+    record = money_move_select(user.get('budget_id'), record_id)[0]
+    print(record)
+    bot.send_message(call.from_user.id, f"Введите новые данные для записи ID {record_id}:")
+
+    # Сохраняем ID записи в состоянии пользователя
+    # Для этого вы можете использовать временное хранилище, например, словарь:
+     # Убедитесь, что edit_states объявлен ранее
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("load_more_"))
+def handle_load_more(call):
+    """
+    Обрабатывает нажатие кнопки "Загрузить еще".
+    """
+    current_page = int(call.data.split("_")[2])  # Получаем текущую страницу
+    user_id = call.from_user.id  # Извлекаем ID пользователя Telegram
+    user = check_or_add_user(user_id)  # Получаем данные пользователя из БД
+
+    # Получаем следующие 10 записей
+    history_data = get_history_for_user(user.get('id'), offset=current_page * 10, limit=10)
+    total_records = count_records(user.get('id'))  # Общее количество записей
+    total_pages = (total_records // 10) + (1 if total_records % 10 else 0)
+
+    keyboard = create_history_buttons(history_data, current_page, total_pages)
+
+    if not history_data:
+        bot.delete_message(call.from_user.id, call.message.message_id)
+        bot.send_message(call.from_user.id, "Нет дополнительных данных для отображения.")
+        return
+
+    # Отправляем клавиатуру с историей
+    bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=keyboard)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("load_previous_"))
+def handle_load_previous(call):
+    """
+    Обрабатывает нажатие кнопки "Предыдущие".
+    """
+    current_page = int(call.data.split("_")[2])  # Получаем текущую страницу
+    user_id = call.from_user.id  # Извлекаем ID пользователя Telegram
+    user = check_or_add_user(user_id)  # Получаем данные пользователя из БД
+
+    # Получаем предыдущие 10 записей
+    history_data = get_history_for_user(user.get('id'), offset=current_page * 10, limit=10)
+    total_records = count_records(user.get('id'))  # Общее количество записей
+    total_pages = (total_records // 10) + (1 if total_records % 10 else 0)
+
+    keyboard = create_history_buttons(history_data, current_page, total_pages)
+
+    if not history_data:
+        bot.send_message(call.from_user.id, "Нет дополнительных данных для отображения.")
+        return
+
+    # Отправляем клавиатуру с историей
+    bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=keyboard)
+
+
 
 @bot.callback_query_handler(func=lambda call: call.data == "create_base_budg")
 def push_create_base_budg(call):

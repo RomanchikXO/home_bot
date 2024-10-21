@@ -263,9 +263,10 @@ def money_move_change(new_sum:float, cat:str, cat_name:str, id_user:int, id_budg
         close_connection(conn)
 
 
-def money_move_select(id_budgets: int):
+def money_move_select(id_budgets: int, id : int = False):
     # вытянут записи из money_move
     # id_budgets - это id базы
+    # id - это id в базе
 
     conn = connect_to_database()
     if not conn:
@@ -275,13 +276,18 @@ def money_move_select(id_budgets: int):
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
             # Добавляем нового пользователя в базу данных
             sql = f"SELECT * FROM money_move WHERE id_budgets = %s AND date_add >= %s"
+            params = (id_budgets, get_first_day_of_month())
+            if id:
+                sql = f"SELECT * FROM money_move WHERE id_budgets = %s AND id = %s"
+                params = (id_budgets, id,)
+
             cursor.execute(
-                sql,(id_budgets, get_first_day_of_month())
+                sql,(params)
             )
 
             data = cursor.fetchall()
             result = [{key: row[key] for key in row.keys() if key in ['category', 'income', 'expenditure', 'id_user',
-                                                                      'id_budgets', 'date_add']} for row in
+                                                                      'id_budgets', 'date_add', 'comment']} for row in
                       data]
             return result
 
@@ -291,6 +297,65 @@ def money_move_select(id_budgets: int):
         return None
     finally:
         close_connection(conn)
+
+
+def get_history_for_user(id_user, offset=0, limit=10):
+    """
+    Получает `limit` записей из таблицы money_move для пользователя `id_user`,
+    начиная с `offset`, отсортированные по дате добавления (date_add) в порядке убывания.
+    """
+
+    conn = connect_to_database()
+    if not conn:
+        return None  # Возвращаем None, если не удалось подключиться к базе данных
+
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql =  """SELECT category, income, expenditure, comment, id FROM money_move WHERE id_user = %s ORDER BY date_add DESC OFFSET %s LIMIT %s;"""
+            params = (id_user, offset, limit)
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+
+            result = [
+                {'category': row['category'], 'income': row['income'], 'expenditure': row['expenditure'],
+                 'comment': row['comment'], 'id' : row['id']}
+                for row in rows
+            ]
+            return result
+
+
+    except Exception as e:
+        print(f"Ошибка получения 10 записей в money_move: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
+def count_records(id_user):
+    """
+    Возвращает общее количество записей в таблице money_move для пользователя `id_user`.
+    """
+    conn = connect_to_database()
+    if not conn:
+        return None  # Возвращаем None, если не удалось подключиться к базе данных
+
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            sql = "SELECT COUNT(*) FROM money_move WHERE id_user = %s;"
+            params = (id_user,)
+
+            cursor.execute(sql, params)
+            count_row = cursor.fetchone()
+            count = count_row['count'] if count_row else 0
+            return count
+
+    except Exception as e:
+        print(f"Ошибка получения кол-ва записей в money_move для пользователя {id_user}: {e}")
+        return None
+    finally:
+        close_connection(conn)
+
+
 
 
 def get_tasks(id_user, date_start=False, status=False, id_task=False):

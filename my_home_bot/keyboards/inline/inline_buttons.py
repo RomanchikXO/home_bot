@@ -21,10 +21,15 @@ def start_budget_buttons(flag=False):
     button2 = InlineKeyboardButton(text="Расход💸", callback_data="expend")
     button3 = InlineKeyboardButton(text="Копилка🏦", callback_data="piggy_bank")
     button4 = InlineKeyboardButton(text="Статистика📊", callback_data="statistic")
+    button5 = InlineKeyboardButton(text="История правок🔧", callback_data="hist_budg")
+
+    spacer = InlineKeyboardButton(text="\u2003", callback_data="none")
 
     # Создаем клавиатуру и добавляем кнопки
     keyboard = InlineKeyboardMarkup()
     keyboard.add(button1, button2)
+    keyboard.add(button5)
+    keyboard.add(spacer)
     keyboard.add(button3, button4)
     return keyboard
 
@@ -124,6 +129,42 @@ def task_edit_buttons(task_id, flag=False):
     keyboard = InlineKeyboardMarkup()
     keyboard.add(button1, button2)
     return keyboard
+
+
+def create_history_buttons(history_data, current_page, total_pages):
+    """
+    Создает клавиатуру с кнопками на основе истории денежных перемещений
+    и добавляет кнопки для навигации между страницами.
+    """
+    keyboard = InlineKeyboardMarkup()
+    for record in history_data:
+        category = record['category']
+        income = record['income']
+        expenditure = record['expenditure']
+        comment = record['comment'] if record['comment'] else "Без комментария"
+        record_id = record['id']
+
+        # Определяем, что использовать в тексте: доход или расход
+        if income != 0:
+            text = f"{category}: 🤑{income} - '{comment}'"
+        else:
+            text = f"{category}: 🔻{expenditure} - '{comment}'"
+
+        # Создаем кнопку с текстом
+        button = InlineKeyboardButton(text=text, callback_data=f"edit_{record_id}")
+        keyboard.add(button)
+
+    # Добавляем кнопку "Загрузить еще", если есть следующая страница
+    if current_page < total_pages-1:
+        keyboard.add(InlineKeyboardButton(text="Загрузить еще", callback_data=f"load_more_{current_page + 1}"), back_buttons('budget', True))
+
+    # Добавляем кнопку "Предыдущие", если не на первой странице
+    if current_page > 0:
+        keyboard.add(InlineKeyboardButton(text="Предыдущие", callback_data=f"load_previous_{current_page - 1}"), back_buttons('budget', True))
+
+    return keyboard
+
+
 
 
 

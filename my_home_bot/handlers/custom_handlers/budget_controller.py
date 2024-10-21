@@ -185,12 +185,14 @@ def handle_category_selection(call):
 def add_sum_to_money_move(message):
     # получаем сумму расхода/дохода, обрабатываем ее и заправшиваем коммент
     bot.delete_message(message.from_user.id, message.message_id)
+
     try:
         bot.delete_message(message.from_user.id, message.message_id - 1)
     except Exception as e:
         # Игнорируем ошибки, чтобы код продолжал выполнение
         pass
     user = check_or_add_user(message.from_user.id)
+    print(user.get('states'))
     global base
 
     message_new = message.text.strip()
@@ -204,7 +206,7 @@ def add_sum_to_money_move(message):
             change_user(message.from_user.id, 'states', 'get_comm_inc')
 
         elif user.get('states') == 'get_sum_exp':
-            bot.send_message(message.from_user.id, f"Введите комментарий для дохода в категории '{base['name_cat']}'",
+            bot.send_message(message.from_user.id, f"Введите комментарий для расхода в категории '{base['name_cat']}'",
                              reply_markup=back_buttons('expend'))
             change_user(message.from_user.id, 'states', 'get_comm_exp')
 

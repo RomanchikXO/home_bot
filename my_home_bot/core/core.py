@@ -549,4 +549,7 @@ def edit_piggy(money:float, id_budg:int, status:str):
         close_connection(conn)
 
 
+def get_unix_to_day():
+    # сегодня в 23:59 unix
+    return int(datetime.now().replace(hour=23, minute=59, second=0, microsecond=0).timestamp())
 

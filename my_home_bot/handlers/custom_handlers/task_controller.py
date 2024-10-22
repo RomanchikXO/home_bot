@@ -41,13 +41,19 @@ def handle_tasks_button(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith("correct_task_"))
 def handle_edit_task(call):
     # тут будет редактирование задачи
-    bot.delete_message(call.from_user.id, call.message.message_id)
+    try:
+        some, _, task_id, delete_flag = call.data.split('_')
+        # Проверяем, нужно ли удалять сообщение
+        if delete_flag == '1':
+            bot.delete_message(call.from_user.id, call.message.message_id)
+    except Exception as e:
+        pass
     user = check_or_add_user(call.from_user.id)
 
     task_id = call.data.split('_')[2]  # Извлекаем ID задачи из callback_data
     task = get_tasks(id_user=user.get('id'), id_task=int(task_id))[0]
     message = f"Плановая дата: {convert_unix_time(task['plane_date'], 'дд.мм.гггг')}\n"
-    message += f"Статус: {task['status']}\n\n"
+    message += f"Статус: {'Новая' if task['status'] == 'new' else 'Просрочена'}\n\n"
     message += f"Задача: {task['task']}\n"
     back_but = back_buttons('tasks', True)
 

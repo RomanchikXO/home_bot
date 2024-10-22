@@ -78,9 +78,10 @@ def create_or_connect_to_budgbase(flag=False):
     return keyboard
 
 
-def correct_task_buttons(text ,task_id, flag=False):
+def correct_task_buttons(text ,task_id, flag=False, delete_message=True):
     # изменить задачу
-    button1 = InlineKeyboardButton(text, callback_data=f"correct_task_{task_id}")
+    delete_flag = '1' if delete_message else '0'
+    button1 = InlineKeyboardButton(text, callback_data=f"correct_task_{task_id}_{delete_flag}")
     if flag:
         return button1
     keyboard = InlineKeyboardMarkup()

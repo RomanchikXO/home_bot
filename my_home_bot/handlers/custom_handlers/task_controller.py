@@ -99,6 +99,8 @@ def add_new_task(message):
     show_calendar(message.from_user.id, datetime.now())
 
 
+
+
 def show_calendar(user_id, date):
     # Получаем первый и последний день месяца
     first_day = date.replace(day=1)
@@ -109,29 +111,65 @@ def show_calendar(user_id, date):
 
     # Заголовок с месяцем и годом
     header = f"{first_day.strftime('%B %Y')}"
-    keyboard.add(InlineKeyboardButton("<", callback_data=f"prev_month_{first_day.month}_{first_day.year}"),
-                  InlineKeyboardButton(header, callback_data="ignore"),
-                  InlineKeyboardButton(">", callback_data=f"next_month_{first_day.month}_{first_day.year}"))
+
+    # Получаем текущую дату
+    today = datetime.now().date()
+
+    # Убираем кнопку "<" если календарь на текущем месяце
+    if first_day.month == today.month and first_day.year == today.year:
+        keyboard.row(
+            InlineKeyboardButton(" ", callback_data="ignore"),
+            InlineKeyboardButton(header, callback_data="ignore"),
+            InlineKeyboardButton(">", callback_data=f"next_month_{first_day.month}_{first_day.year}")
+        )
+    else:
+        keyboard.row(
+            InlineKeyboardButton("<", callback_data=f"prev_month_{first_day.month}_{first_day.year}"),
+            InlineKeyboardButton(header, callback_data="ignore"),
+            InlineKeyboardButton(">", callback_data=f"next_month_{first_day.month}_{first_day.year}")
+        )
+
+    # День недели, с которого начинается месяц (понедельник = 0, воскресенье = 6)
+    start_weekday = (first_day.weekday() + 6) % 7  # Переводим так, чтобы понедельник был началом
+    if start_weekday != 0:
+        start_weekday += 1
+
+    # Добавляем пустые кнопки до первого дня месяца, если месяц не начинается с понедельника
+    week = []
+    for _ in range(start_weekday):
+        week.append(InlineKeyboardButton(" ", callback_data="ignore"))
 
     # Добавляем дни месяца
-    days = [first_day + timedelta(days=i) for i in range((last_day - first_day).days + 1)]
+    for day in range(1, (last_day - first_day).days + 2):
+        current_date = first_day.replace(day=day).date()
 
-    # Группируем дни по 7
-    week = []
-    for day in days:
+        if current_date < today and current_date >= today - timedelta(days=today.weekday()):
+            # Дни на текущей неделе, которые уже прошли, делаем пустыми
+            week.append(InlineKeyboardButton(" ", callback_data="ignore"))
+        elif current_date >= today:
+            # Доступные для выбора дни
+            week.append(InlineKeyboardButton(f"{day}", callback_data=f"select_date_{current_date.strftime('%d.%m.%Y')}"))
+
+        # Добавляем неделю в клавиатуру, если она полная (7 кнопок)
         if len(week) == 7:
-            keyboard.add(*week)
+            keyboard.row(*week)
             week = []
-        week.append(InlineKeyboardButton(day.day, callback_data=f"select_date_{day.strftime('%d.%m.%Y')}"))
 
-    # Добавляем последнюю неделю, если она неполная
+    # Добавляем дни следующего месяца до завершения последней недели
+    next_month_day = 1
+    while len(week) < 7:
+        current_date = last_day + timedelta(days=next_month_day)
+        week.append(InlineKeyboardButton(f"{next_month_day}", callback_data=f"select_date_{current_date.strftime('%d.%m.%Y')}"))
+        next_month_day += 1
+
     if week:
-        keyboard.add(*week)
+        keyboard.row(*week)
 
     # Кнопка для возврата
-    keyboard.add(InlineKeyboardButton("Назад", callback_data='tasks'))
+    keyboard.row(InlineKeyboardButton("Назад", callback_data='tasks'))
 
     bot.send_message(user_id, "Выберите дату:", reply_markup=keyboard)
+
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("prev_month_"))
@@ -155,8 +193,6 @@ def handle_prev_month(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith("next_month_"))
 def handle_next_month(call):
     bot.delete_message(call.from_user.id, call.message.message_id)
-    print(call.data.split("_")[2:])
-
 
     month, year = map(int, call.data.split("_")[2:])  # Извлечение месяца и года
     # Увеличиваем месяц и проверяем на переполнение

@@ -2,9 +2,7 @@ from database.DataBase import *
 import psycopg2.extras
 from config_data.config import cipher
 import time
-from datetime import datetime
-
-
+from datetime import datetime, timedelta
 
 
 def check_or_add_user(tg_id):
@@ -551,5 +549,16 @@ def edit_piggy(money:float, id_budg:int, status:str):
 
 def get_unix_to_day():
     # сегодня в 23:59 unix
-    return int(datetime.now().replace(hour=23, minute=59, second=0, microsecond=0).timestamp())
+
+    # Получаем текущее время
+    now = datetime.now()
+
+    # Устанавливаем временную зону на Московское время (UTC+3)
+    moscow_time = now + timedelta(hours=3)
+
+    # Устанавливаем время на 23:59
+    moscow_time = moscow_time.replace(hour=23, minute=59, second=0, microsecond=0)
+
+    # Возвращаем время в формате Unix timestamp
+    return int(moscow_time.timestamp())
 

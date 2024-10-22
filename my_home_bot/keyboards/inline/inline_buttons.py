@@ -186,6 +186,9 @@ def create_history_buttons(history_data, current_page, total_pages):
     if current_page > 0:
         keyboard.add(InlineKeyboardButton(text="Предыдущие", callback_data=f"load_previous_{current_page - 1}"), back_buttons('budget', True))
 
+    if (current_page >= total_pages-1) and  (current_page <= 0):
+        keyboard.add(back_buttons('budget', True))
+
     return keyboard
 
 

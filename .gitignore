@@ -6,3 +6,4 @@
 /venv/
 .DS_Store
 /my_home_bot/.idea/
+/my_home_bot/celerybeat-schedule.db

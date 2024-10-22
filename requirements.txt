@@ -13,7 +13,6 @@ idna==3.10
 kombu==5.4.2
 prettytable==3.11.0
 prompt_toolkit==3.0.48
-psycopg2==2.9.9
 psycopg2-binary==2.9.10
 pycparser==2.22
 pyTelegramBotAPI==4.23.0

@@ -96,7 +96,7 @@ def add_new_task(message):
     global some_data
     some_data = message.text
 
-    show_calendar(message.from_user.id, datetime.now())
+    show_calendar(message.from_user.id, datetime.utcnow() + timedelta(hours=3))
 
 
 
@@ -113,7 +113,7 @@ def show_calendar(user_id, date):
     header = f"{first_day.strftime('%B %Y')}"
 
     # Получаем текущую дату
-    today = datetime.now().date()
+    today = (datetime.utcnow() + timedelta(hours=3)).date()
 
     # Убираем кнопку "<" если календарь на текущем месяце
     if first_day.month == today.month and first_day.year == today.year:

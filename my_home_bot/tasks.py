@@ -44,10 +44,10 @@ def check_tasks():
 
                 start_menu = start_menu_buttons(True)
                 create = create_task(True)
-                keyboard = InlineKeyboardMarkup()
 
                 for user_tasks in result:
                     tg_id = user_tasks['tg_id']
+                    keyboard = InlineKeyboardMarkup()
 
                     message_text = "Задачи на сегодня:\n"
 
@@ -86,7 +86,7 @@ def old_tasks():
 
             # Выбираем задачи, которые нужно выполнить
             cursor.execute("""
-                SELECT id FROM task WHERE plane_date=%s 
+                SELECT id FROM task WHERE plane_date<=%s 
             """, (yesterday,))
             tasks = cursor.fetchall()
             if tasks:
@@ -96,15 +96,9 @@ def old_tasks():
                                         UPDATE task SET status=%s WHERE id IN %s
                                     """, ('old', tuple(task_ids)))  # Преобразуем список в кортеж
 
-            conn.commit()
-
-
 
             conn.commit()
     except Exception as e:
         print(f"Ошибка: {e}")
     finally:
         conn.close()
-
-
-old_tasks()

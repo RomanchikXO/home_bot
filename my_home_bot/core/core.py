@@ -503,7 +503,7 @@ def convert_to_unix(date_str):
 
 def get_first_day_of_month():
     """получить первый день месяца UNIX"""
-    now = datetime.now()
+    now = datetime.utcnow() + timedelta(hours=3)
     first_day = datetime(year=now.year, month=now.month, day=1, hour=0, minute=1)
     unix_timestamp = int(time.mktime(first_day.timetuple()))
     return unix_timestamp
@@ -548,10 +548,10 @@ def edit_piggy(money:float, id_budg:int, status:str):
 
 
 def get_unix_to_day():
-    # сегодня в 23:59 unix
+    # сегодня в 23:59 unix (по мск)
 
     # Получаем текущее время
-    now = datetime.now()
+    now = datetime.utcnow()
 
     # Устанавливаем временную зону на Московское время (UTC+3)
     moscow_time = now + timedelta(hours=3)
@@ -561,4 +561,3 @@ def get_unix_to_day():
 
     # Возвращаем время в формате Unix timestamp
     return int(moscow_time.timestamp())
-

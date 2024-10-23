@@ -124,7 +124,7 @@ def task_edit_buttons(task_id, flag=False):
             Кнопки для редактирования и удаления.
         """
     button1 = InlineKeyboardButton('Удалить', callback_data=f"del_task_{task_id}")
-    button2 = InlineKeyboardButton('Изменить', callback_data=f"edit_task_{task_id}")
+    button2 = InlineKeyboardButton('Изменить', callback_data=f"task_edit_{task_id}")
     if flag:
         return button1, button2
     keyboard = InlineKeyboardMarkup()

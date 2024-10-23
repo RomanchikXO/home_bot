@@ -73,7 +73,7 @@ def handle_del_task(call):
     bot.send_message(call.from_user.id, 'Задача удалена', reply_markup=back_buttons('tasks'))
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith("edit_task_"))
+@bot.callback_query_handler(func=lambda call: call.data.startswith("task_edit_"))
 def handle_correct_task(call):
     #редактировать задачу
     bot.delete_message(call.from_user.id, call.message.message_id)

@@ -354,7 +354,10 @@ def count_records(id_user):
         close_connection(conn)
 
 
-def del_or_edit_task (type_but:str, id_record:int, text=False):
+def del_or_edit_task (type_but:str, id_record:int, new_sum=False):
+    """
+    удалить или изменить запись в money move
+    """
     sql = ''
     conn = connect_to_database()
     if not conn:
@@ -363,8 +366,10 @@ def del_or_edit_task (type_but:str, id_record:int, text=False):
         sql = f"DELETE FROM money_move WHERE id = %s"
         params = (id_record,)
     elif type_but == 'edit':
-        sql = "UPDATE money_move SET comment = %s WHERE id = %s"
-        params = (text, id_record)
+        sql = """
+        UPDATE money_move SET income = CASE WHEN income = 0 THEN income ELSE %s END, expenditure = CASE WHEN income = 0 THEN %s ELSE expenditure END WHERE id = %s
+        """
+        params = (new_sum, new_sum, id_record)
     else:
         # Если тип операции не поддерживается
         print("Некорректный тип операции")

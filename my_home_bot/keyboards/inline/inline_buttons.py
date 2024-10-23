@@ -21,7 +21,7 @@ def start_budget_buttons(flag=False):
     button2 = InlineKeyboardButton(text="Расход💸", callback_data="expend")
     button3 = InlineKeyboardButton(text="Копилка🏦", callback_data="piggy_bank")
     button4 = InlineKeyboardButton(text="Статистика📊", callback_data="statistic")
-    button5 = InlineKeyboardButton(text="История правок🔧", callback_data="hist_budg")
+    button5 = InlineKeyboardButton(text="Последние операции🔧", callback_data="hist_budg")
 
     spacer = InlineKeyboardButton(text="\u2003", callback_data="none")
 
@@ -147,7 +147,7 @@ def del_edit_money_buttons(money_id, flag=False):
             Кнопки для редактирования и удаления.
         """
     button1 = InlineKeyboardButton('Удалить', callback_data=f"del_mon_{money_id}")
-    button2 = InlineKeyboardButton('Изменить', callback_data=f"ed_mon_{money_id}")
+    button2 = InlineKeyboardButton('Изменить сумму', callback_data=f"ed_mon_{money_id}")
     if flag:
         return button1, button2
     keyboard = InlineKeyboardMarkup()

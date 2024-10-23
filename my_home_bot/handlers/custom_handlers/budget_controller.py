@@ -244,7 +244,7 @@ def add_comm_to_money_move(message):
 @bot.callback_query_handler(func=lambda call: call.data == "hist_budg")
 def handle_hist_budg(call):
     """
-    Обрабатывает нажатие кнопки "История правок".
+    Обрабатывает нажатие кнопки "История последних операций".
     Загружает первую страницу данных.
     """
     bot.delete_message(call.from_user.id, call.message.message_id)
@@ -264,7 +264,7 @@ def handle_hist_budg(call):
         return
 
     # Отправляем клавиатуру с историей
-    bot.send_message(call.from_user.id, "История последних правок:", reply_markup=keyboard)
+    bot.send_message(call.from_user.id, "История последних операций:", reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("edit_"))
@@ -303,7 +303,7 @@ def handle_edit_record(call):
 
     bot.send_message(
         call.from_user.id,
-        f"Введите новые данные для записи ID {record_id}:\n\n```\n{table_string}\n```",
+        f"Редактировать запись:\n\n```\n{table_string}\n```",
         reply_markup=keyboard,
         parse_mode='MarkdownV2'  # Используем MarkdownV2, чтобы текст форматировался правильно
     )
@@ -324,10 +324,26 @@ def handle_del_money_record(call):
 def handle_edit_money_record(call):
     # тут запрос на изменение суммы в базе money_move
     bot.delete_message(call.from_user.id, call.message.message_id)
-    rec_id = call.data.split('_')[2]
+
+    global base
+    base = call.data.split('_')[2]
+    change_user(call.from_user.id, 'states', 'get_new_sum_base_mon_move')
+
+    bot.send_message(call.from_user.id, 'Введите новую сумму:', reply_markup=back_buttons('hist_budg'))
 
 
-    bot.send_message(call.from_user.id, 'Пока в разработке', reply_markup=back_buttons('hist_budg'))
+@bot.message_handler(func=lambda message: check_or_add_user(message.from_user.id).get('states') == 'get_new_sum_base_mon_move')
+def set_new_sum_mon_move(message):
+    bot.delete_message(message.from_user.id, message.message_id)
+    global base
+    try:
+        new_sum = float(message.text)
+        del_or_edit_task('edit', base, new_sum=new_sum)
+        bot.send_message(message.from_user.id, 'Успешно изменено ', reply_markup=back_buttons('hist_budg'))
+        change_user(message.from_user.id, 'states', None)
+    except ValueError:
+        bot.send_message(message.from_user.id, 'Некорретный ввод, повторите попытку: ', reply_markup=back_buttons('hist_budg'))
+
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("load_more_"))
 def handle_load_more(call):

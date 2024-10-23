@@ -15,12 +15,12 @@ app.conf.update(
 
 from tasks import check_tasks, old_tasks
 app.conf.beat_schedule = {
-    'check-tasks-every-day-at-midnight-one-minute': {
+    'check-tasks-every-3-hours': {
         'task': 'tasks.check_tasks',
-        'schedule': crontab(hour=0, minute=30),  # Запускать check_tasks каждый день в 00:20
+        'schedule': crontab(minute=0, hour='*/3'),  # Запускать каждые 3 часа
     },
-    'mark-old-tasks-every-day-at-midnight-one-minute': {
+    'mark-old-tasks-every-3-hours': {
         'task': 'tasks.old_tasks',
-        'schedule': crontab(hour=0, minute=30),  # Запускать old_tasks каждый день в 00:20
+        'schedule': crontab(minute=0, hour='*/3'),  # Запускать каждые 3 часа
     },
 }

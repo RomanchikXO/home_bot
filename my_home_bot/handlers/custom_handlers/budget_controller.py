@@ -465,6 +465,7 @@ def handle_stat_button(call):
     """
     Обрабатывает нажатие кнопки "Статистика".
     """
+    bot.send_chat_action(call.message.chat.id, 'typing')
     bot.delete_message(call.from_user.id, call.message.message_id)
     user = check_or_add_user(call.from_user.id)
 

@@ -355,8 +355,8 @@ def handle_load_more(call):
     user = check_or_add_user(user_id)  # Получаем данные пользователя из БД
 
     # Получаем следующие 10 записей
-    history_data = get_history_for_user(user.get('id'), offset=current_page * 10, limit=10)
-    total_records = count_records(user.get('id'))  # Общее количество записей
+    history_data = get_history_for_user(user.get('budget_id'), offset=current_page * 10, limit=10)
+    total_records = count_records(user.get('budget_id'))  # Общее количество записей
     total_pages = (total_records // 10) + (1 if total_records % 10 else 0)
 
     keyboard = create_history_buttons(history_data, current_page, total_pages)
@@ -379,8 +379,8 @@ def handle_load_previous(call):
     user = check_or_add_user(user_id)  # Получаем данные пользователя из БД
 
     # Получаем предыдущие 10 записей
-    history_data = get_history_for_user(user.get('id'), offset=current_page * 10, limit=10)
-    total_records = count_records(user.get('id'))  # Общее количество записей
+    history_data = get_history_for_user(user.get('budget_id'), offset=current_page * 10, limit=10)
+    total_records = count_records(user.get('budget_id'))  # Общее количество записей
     total_pages = (total_records // 10) + (1 if total_records % 10 else 0)
 
     keyboard = create_history_buttons(history_data, current_page, total_pages)

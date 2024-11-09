@@ -253,8 +253,8 @@ def handle_hist_budg(call):
     user = check_or_add_user(user_id)  # Получаем данные пользователя из БД
 
     # Получаем последние 10 записей для этого пользователя
-    history_data = get_history_for_user(user.get('id'), offset=0, limit=10)
-    total_records = count_records(user.get('id'))  # Функция, чтобы узнать общее количество записей
+    history_data = get_history_for_user(user.get('budget_id'), offset=0, limit=10)
+    total_records = count_records(user.get('budget_id'))  # Функция, чтобы узнать общее количество записей
     total_pages = (total_records // 10) + (1 if total_records % 10 else 0)
 
     keyboard = create_history_buttons(history_data, 0, total_pages)

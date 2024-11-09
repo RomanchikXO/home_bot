@@ -297,9 +297,9 @@ def money_move_select(id_budgets: int, id : int = False):
         close_connection(conn)
 
 
-def get_history_for_user(id_user, offset=0, limit=10):
+def get_history_for_user(id_budgets, offset=0, limit=10):
     """
-    Получает `limit` записей из таблицы money_move для пользователя `id_user`,
+    Получает `limit` записей из таблицы money_move для одной группы пользователей `id_budgets`,
     начиная с `offset`, отсортированные по дате добавления (date_add) в порядке убывания.
     """
 
@@ -309,14 +309,14 @@ def get_history_for_user(id_user, offset=0, limit=10):
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-            sql =  """SELECT category, income, expenditure, comment, id FROM money_move WHERE id_user = %s ORDER BY date_add DESC OFFSET %s LIMIT %s;"""
-            params = (id_user, offset, limit)
+            sql =  """SELECT category, income, expenditure, comment, id, id_user FROM money_move WHERE id_budgets = %s ORDER BY date_add DESC OFFSET %s LIMIT %s;"""
+            params = (id_budgets, offset, limit)
             cursor.execute(sql, params)
             rows = cursor.fetchall()
 
             result = [
                 {'category': row['category'], 'income': row['income'], 'expenditure': row['expenditure'],
-                 'comment': row['comment'], 'id' : row['id']}
+                 'comment': row['comment'], 'id' : row['id'], 'id_budgets': row['id_budgets']}
                 for row in rows
             ]
             return result
@@ -329,9 +329,9 @@ def get_history_for_user(id_user, offset=0, limit=10):
         close_connection(conn)
 
 
-def count_records(id_user):
+def count_records(id_budgets):
     """
-    Возвращает общее количество записей в таблице money_move для пользователя `id_user`.
+    Возвращает общее количество записей в таблице money_move для группы `id_budgets`.
     """
     conn = connect_to_database()
     if not conn:
@@ -339,8 +339,8 @@ def count_records(id_user):
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-            sql = "SELECT COUNT(*) FROM money_move WHERE id_user = %s;"
-            params = (id_user,)
+            sql = "SELECT COUNT(*) FROM money_move WHERE id_budgets = %s;"
+            params = (id_budgets,)
 
             cursor.execute(sql, params)
             count_row = cursor.fetchone()
@@ -348,7 +348,7 @@ def count_records(id_user):
             return count
 
     except Exception as e:
-        print(f"Ошибка получения кол-ва записей в money_move для пользователя {id_user}: {e}")
+        print(f"Ошибка получения кол-ва записей в money_move для группы {id_budgets}: {e}")
         return None
     finally:
         close_connection(conn)

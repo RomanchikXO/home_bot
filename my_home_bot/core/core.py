@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 
 
-def check_or_add_user(tg_id):
+def check_or_add_user(tg_id: int):
     """
     Проверяет наличие пользователя в таблице accounts по tg_id.
     Если пользователь существует, возвращает его данные.
@@ -316,7 +316,7 @@ def get_history_for_user(id_budgets, offset=0, limit=10):
 
             result = [
                 {'category': row['category'], 'income': row['income'], 'expenditure': row['expenditure'],
-                 'comment': row['comment'], 'id' : row['id'], 'id_budgets': row['id_budgets']}
+                 'comment': row['comment'], 'id' : row['id'], 'id_user': row['id_user']}
                 for row in rows
             ]
             return result
